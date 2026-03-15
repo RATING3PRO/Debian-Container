@@ -1,0 +1,77 @@
+name: build-and-push
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/debian-container
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        debian_version:
+          - bullseye
+          - bookworm
+          - trixie
+        include:
+          - debian_version: bullseye
+            platforms: linux/amd64,linux/arm64
+          - debian_version: bookworm
+            platforms: linux/amd64,linux/arm64
+          - debian_version: trixie
+            platforms: linux/amd64,linux/arm64
+
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            type=raw,value=${{ matrix.debian_version }}
+            type=raw,value=${{ matrix.debian_version }}-{{date 'YYYYMMDD'}}
+            type=raw,value=latest,enable=${{ matrix.debian_version == 'bookworm' }}
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          platforms: ${{ matrix.platforms }}
+          build-args: |
+            DEBIAN_VERSION=${{ matrix.debian_version }}
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
