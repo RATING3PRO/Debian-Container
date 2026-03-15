@@ -45,4 +45,86 @@ else
   sed -i "s/^#\?PermitRootLogin .*/PermitRootLogin no/" /etc/ssh/sshd_config
 fi
 
+# Komari Agent Integration
+if [ -n "${KOMARI_TOKEN}" ] && [ -n "${KOMARI_SERVER}" ]; then
+  KOMARI_DIR="/opt/komari-agent"
+  KOMARI_BIN="${KOMARI_DIR}/komari-agent"
+  
+  # Download and install if not present
+  if [ ! -f "${KOMARI_BIN}" ]; then
+    echo "Komari Agent not found, installing..."
+    mkdir -p "${KOMARI_DIR}"
+    
+    # Detect architecture
+    ARCH=$(uname -m)
+    case "${ARCH}" in
+      x86_64) KOMARI_ARCH="amd64" ;;
+      aarch64) KOMARI_ARCH="arm64" ;;
+      *) echo "Unsupported architecture for Komari Agent: ${ARCH}"; exit 1 ;;
+    esac
+
+    # Download latest release
+    # Try to get latest release URL from GitHub API
+    LATEST_URL=$(curl -s "https://api.github.com/repos/komari-monitor/komari-agent/releases/latest" | grep "browser_download_url.*linux_${KOMARI_ARCH}.zip" | cut -d '"' -f 4)
+    
+    if [ -z "${LATEST_URL}" ]; then
+       echo "Failed to fetch latest Komari Agent URL via API. Trying to construct download URL..."
+       # Fallback: try to guess or use a fixed version/logic if API fails (e.g. rate limit)
+       # Since we cannot easily guess the version tag without API, we might fail here.
+       # A better approach in production might be to allow passing a version or URL via ENV.
+       echo "Error: Could not determine download URL for Komari Agent. Please check network or GitHub API limits."
+    else
+       echo "Downloading Komari Agent from ${LATEST_URL}..."
+       curl -L -o "${KOMARI_DIR}/komari-agent.zip" "${LATEST_URL}"
+       if [ $? -eq 0 ]; then
+         unzip -o "${KOMARI_DIR}/komari-agent.zip" -d "${KOMARI_DIR}"
+         chmod +x "${KOMARI_BIN}"
+         rm "${KOMARI_DIR}/komari-agent.zip"
+         echo "Komari Agent installed successfully."
+       else
+         echo "Error: Failed to download Komari Agent."
+       fi
+    fi
+  fi
+
+  if [ -f "${KOMARI_BIN}" ]; then
+    echo "Starting Komari Agent..."
+    # Build arguments - we construct the command string
+    # Note: We use an array for arguments to handle spacing correctly if needed, 
+    # but for simple flags string concatenation is often sufficient in sh.
+    # However, to be safe with shell expansion:
+    
+    KOMARI_CMD="${KOMARI_BIN} --server ${KOMARI_SERVER} --token ${KOMARI_TOKEN}"
+    
+    if [ -n "${KOMARI_HOST_ID}" ]; then
+      KOMARI_CMD="${KOMARI_CMD} --host-id ${KOMARI_HOST_ID}"
+    fi
+    
+    if [ -n "${KOMARI_HOSTNAME}" ]; then
+      KOMARI_CMD="${KOMARI_CMD} --hostname ${KOMARI_HOSTNAME}"
+    fi
+    
+    if [ "${KOMARI_DISABLE_WEB_SSH}" = "true" ]; then
+      KOMARI_CMD="${KOMARI_CMD} --disable-web-ssh"
+    fi
+
+    if [ "${KOMARI_DISABLE_COMMAND_EXEC}" = "true" ]; then
+      KOMARI_CMD="${KOMARI_CMD} --disable-command-exec"
+    fi
+    
+    if [ "${KOMARI_DISABLE_FILE_MANAGER}" = "true" ]; then
+      KOMARI_CMD="${KOMARI_CMD} --disable-file-manager"
+    fi
+
+    # Run in background
+    # We use 'nohup' and redirect output to log file
+    echo "Executing: ${KOMARI_CMD}"
+    nohup ${KOMARI_CMD} > /var/log/komari-agent.log 2>&1 &
+    
+    echo "Komari Agent started in background."
+  else
+    echo "Warning: Komari Agent binary not found at ${KOMARI_BIN}. Skipping start."
+  fi
+fi
+
 exec /usr/sbin/sshd -D -e

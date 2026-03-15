@@ -13,6 +13,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     tzdata \
     sudo \
     passwd \
+    curl \
+    unzip \
+    wget \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /var/run/sshd /etc/ssh

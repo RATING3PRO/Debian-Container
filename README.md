@@ -21,6 +21,13 @@
 | `SSH_ALLOW_PASSWORD_AUTH` | `true` | 是否启用密码认证，`false` 时关闭 |
 | `SSH_ALLOW_ROOT_LOGIN` | `false` | 是否允许 root 登录，`true` 时开启 |
 | `ROOT_PASSWORD` | 空 | 可选，设置 root 密码 |
+| `KOMARI_SERVER` | 空 | Komari Server 地址，设置后开启 Agent |
+| `KOMARI_TOKEN` | 空 | Komari Server 通讯 Token |
+| `KOMARI_HOST_ID` | 空 | 指定 Agent 的 Host ID |
+| `KOMARI_HOSTNAME` | 空 | 指定 Agent 上报的主机名 |
+| `KOMARI_DISABLE_WEB_SSH` | `false` | 设置为 `true` 禁用 Web SSH |
+| `KOMARI_DISABLE_COMMAND_EXEC` | `false` | 设置为 `true` 禁用命令执行 |
+| `KOMARI_DISABLE_FILE_MANAGER` | `false` | 设置为 `true` 禁用文件管理 |
 
 ## 本地构建
 
