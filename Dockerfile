@@ -17,12 +17,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 RUN mkdir -p /var/run/sshd /etc/ssh
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY docker/entrypoint.sh /usr/bin/entrypoint.sh
 
-RUN chmod +x /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/bin/entrypoint.sh
 
 VOLUME ["/etc/ssh", "/home", "/root", "/var/log", "/usr/local", "/opt", "/var/cache/apt/archives"]
 
 EXPOSE 22
 
-ENTRYPOINT ["bash", "/usr/local/bin/entrypoint.sh"]
+ENTRYPOINT ["bash", "/usr/bin/entrypoint.sh"]

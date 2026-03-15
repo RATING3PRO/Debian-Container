@@ -71,6 +71,10 @@ docker run -d \
   debian-ssh:bookworm
 ```
 
+**注意：**
+- 由于 `/usr/local` 被声明为持久化卷，容器启动脚本已移至 `/usr/bin/entrypoint.sh`，避免被空卷覆盖。
+- 如需覆盖启动行为，请使用 `--entrypoint` 参数或在 `docker run` 命令后指定。
+
 如需绑定宿主机目录：
 
 ```bash
