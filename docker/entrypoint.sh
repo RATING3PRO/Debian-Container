@@ -64,18 +64,25 @@ if [ -n "${KOMARI_TOKEN}" ] && [ -n "${KOMARI_SERVER}" ]; then
     esac
 
     # Download latest release
-    # GitHub provides a reliable 'latest' redirect URL structure for assets
-    LATEST_URL="https://github.com/komari-monitor/komari-agent/releases/latest/download/komari-agent-linux-${KOMARI_ARCH}.zip"
+    # Get latest version tag from GitHub redirect
+    LATEST_VERSION=$(curl -sI "https://github.com/komari-monitor/komari-agent/releases/latest" | grep -i "location:" | awk -F '/' '{print $NF}' | tr -d '\r')
     
-    echo "Downloading Komari Agent from ${LATEST_URL}..."
-    curl -L -f -o "${KOMARI_DIR}/komari-agent.zip" "${LATEST_URL}"
-    if [ $? -eq 0 ]; then
-      unzip -o "${KOMARI_DIR}/komari-agent.zip" -d "${KOMARI_DIR}"
-      chmod +x "${KOMARI_BIN}"
-      rm "${KOMARI_DIR}/komari-agent.zip"
-      echo "Komari Agent installed successfully."
+    if [ -z "${LATEST_VERSION}" ]; then
+       echo "Error: Could not determine latest version tag. Please check network."
     else
-      echo "Error: Failed to download Komari Agent from ${LATEST_URL}. Please check network connection."
+       # Construct download URL with version
+       DOWNLOAD_URL="https://github.com/komari-monitor/komari-agent/releases/download/${LATEST_VERSION}/komari-agent-linux-${KOMARI_ARCH}"
+       
+       echo "Downloading Komari Agent ${LATEST_VERSION} from ${DOWNLOAD_URL}..."
+       curl -L -f -o "${KOMARI_BIN}" "${DOWNLOAD_URL}"
+       
+       if [ $? -eq 0 ]; then
+         chmod +x "${KOMARI_BIN}"
+         echo "Komari Agent installed successfully."
+       else
+         echo "Error: Failed to download Komari Agent from ${DOWNLOAD_URL}. Please check network connection."
+         rm -f "${KOMARI_BIN}"
+       fi
     fi
   fi
 
