@@ -23,11 +23,10 @@
 | `ROOT_PASSWORD` | 空 | 可选，设置 root 密码 |
 | `KOMARI_SERVER` | 空 | Komari Server 地址，设置后开启 Agent |
 | `KOMARI_TOKEN` | 空 | Komari Server 通讯 Token |
-| `KOMARI_HOST_ID` | 空 | 指定 Agent 的 Host ID |
-| `KOMARI_HOSTNAME` | 空 | 指定 Agent 上报的主机名 |
 | `KOMARI_DISABLE_WEB_SSH` | `false` | 设置为 `true` 禁用 Web SSH |
-| `KOMARI_DISABLE_COMMAND_EXEC` | `false` | 设置为 `true` 禁用命令执行 |
-| `KOMARI_DISABLE_FILE_MANAGER` | `false` | 设置为 `true` 禁用文件管理 |
+| `KOMARI_DISABLE_AUTO_UPDATE` | `false` | 设置为 `true` 禁用自动更新 |
+| `KOMARI_IGNORE_UNSAFE_CERT` | `false` | 设置为 `true` 忽略不安全的 SSL 证书 |
+| `KOMARI_MEMORY_INCLUDE_CACHE` | `false` | 设置为 `true` 将缓存/Buffer 计入内存使用量 |
 
 ## 本地构建
 
