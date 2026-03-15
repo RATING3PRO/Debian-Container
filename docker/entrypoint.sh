@@ -64,26 +64,18 @@ if [ -n "${KOMARI_TOKEN}" ] && [ -n "${KOMARI_SERVER}" ]; then
     esac
 
     # Download latest release
-    # Try to get latest release URL from GitHub API
-    LATEST_URL=$(curl -s "https://api.github.com/repos/komari-monitor/komari-agent/releases/latest" | grep "browser_download_url.*linux_${KOMARI_ARCH}.zip" | cut -d '"' -f 4)
+    # GitHub provides a reliable 'latest' redirect URL structure for assets
+    LATEST_URL="https://github.com/komari-monitor/komari-agent/releases/latest/download/komari-agent-linux-${KOMARI_ARCH}.zip"
     
-    if [ -z "${LATEST_URL}" ]; then
-       echo "Failed to fetch latest Komari Agent URL via API. Trying to construct download URL..."
-       # Fallback: try to guess or use a fixed version/logic if API fails (e.g. rate limit)
-       # Since we cannot easily guess the version tag without API, we might fail here.
-       # A better approach in production might be to allow passing a version or URL via ENV.
-       echo "Error: Could not determine download URL for Komari Agent. Please check network or GitHub API limits."
+    echo "Downloading Komari Agent from ${LATEST_URL}..."
+    curl -L -f -o "${KOMARI_DIR}/komari-agent.zip" "${LATEST_URL}"
+    if [ $? -eq 0 ]; then
+      unzip -o "${KOMARI_DIR}/komari-agent.zip" -d "${KOMARI_DIR}"
+      chmod +x "${KOMARI_BIN}"
+      rm "${KOMARI_DIR}/komari-agent.zip"
+      echo "Komari Agent installed successfully."
     else
-       echo "Downloading Komari Agent from ${LATEST_URL}..."
-       curl -L -o "${KOMARI_DIR}/komari-agent.zip" "${LATEST_URL}"
-       if [ $? -eq 0 ]; then
-         unzip -o "${KOMARI_DIR}/komari-agent.zip" -d "${KOMARI_DIR}"
-         chmod +x "${KOMARI_BIN}"
-         rm "${KOMARI_DIR}/komari-agent.zip"
-         echo "Komari Agent installed successfully."
-       else
-         echo "Error: Failed to download Komari Agent."
-       fi
+      echo "Error: Failed to download Komari Agent from ${LATEST_URL}. Please check network connection."
     fi
   fi
 
