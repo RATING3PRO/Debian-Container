@@ -88,17 +88,8 @@ if [ -n "${KOMARI_TOKEN}" ] && [ -n "${KOMARI_SERVER}" ]; then
 
   if [ -f "${KOMARI_BIN}" ]; then
     echo "Starting Komari Agent..."
-    # Build arguments - we construct the command string
-    # Note: We use an array for arguments to handle spacing correctly if needed, 
-    # but for simple flags string concatenation is often sufficient in sh.
-    # However, to be safe with shell expansion:
     
     KOMARI_CMD="${KOMARI_BIN} -e ${KOMARI_SERVER} -t ${KOMARI_TOKEN}"
-    
-    # Note: host-id and hostname flags are not standard in all versions of komari-agent or might be auto-discovered.
-    # Based on help output, there are no --host-id or --hostname flags.
-    # If these are needed, they might need to be passed via config file or other means.
-    # For now, we will skip adding them as flags to avoid errors, unless specific flags exist (e.g. --auto-discovery).
     
     if [ "${KOMARI_DISABLE_WEB_SSH}" = "true" ]; then
       KOMARI_CMD="${KOMARI_CMD} --disable-web-ssh"
@@ -116,18 +107,8 @@ if [ -n "${KOMARI_TOKEN}" ] && [ -n "${KOMARI_SERVER}" ]; then
       KOMARI_CMD="${KOMARI_CMD} --memory-include-cache"
     fi
     
-    # --disable-command-exec and --disable-file-manager are not in the help output provided by user.
-    # However, --disable-web-ssh IS in the help output.
-    # Assuming other disable flags might not exist or were missed. 
-    # Let's keep only validated flags based on user input log.
-    # User log shows: --disable-web-ssh
-    # It does NOT show: --disable-command-exec, --disable-file-manager, --host-id, --hostname
-    
-    # If user insists on other flags, they might need a newer version or check docs.
-    # For stability, we remove unknown flags.
-    
     # Run in background
-    # We use 'nohup' and redirect output to log file
+    # use 'nohup' and redirect output to log file
     echo "Executing: ${KOMARI_CMD}"
     nohup ${KOMARI_CMD} > /var/log/komari-agent.log 2>&1 &
     
