@@ -1,5 +1,7 @@
 # Debian Container with SSH
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/RATING3PRO/Debian-Container)
+
 基于 Debian slim 镜像，默认启动 SSH 服务，支持通过环境变量初始化账号、密码和时区，适合在容器环境中快速部署可远程连接的 Debian 运行环境。
 
 ## 功能特性
